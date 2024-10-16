@@ -10,6 +10,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Voltage;
+import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.subsystems.swerve.Constants.ModuleConstants;
 import com.revrobotics.CANSparkLowLevel;
 import com.revrobotics.CANSparkMax;
@@ -138,5 +141,25 @@ public class SwerveModule {
   public void resetEncoders() {
     m_driveMotor.getEncoder().setPosition(0.0);
     m_absoluteEncoder.setPosition(0.0);  // Do we really want to mess with the CANCoder?
+  }
+
+  // The following methods are for SysId only!!!
+  public void setDriveVoltage(double voltage) {
+    m_driveMotor.setVoltage(voltage);
+  }
+
+  // Returns units of Volts
+  public double getDriveVoltage() {
+    return m_driveMotor.get() * RobotController.getBatteryVoltage();
+  }
+
+  // Returns units of meters
+  public double getDrivePosition() {
+    return m_driveMotor.getEncoder().getPosition();
+  }
+
+  // Returns units of meters/second
+  public double getDriveVelocity() {
+    return m_driveMotor.getEncoder().getVelocity();
   }
 }

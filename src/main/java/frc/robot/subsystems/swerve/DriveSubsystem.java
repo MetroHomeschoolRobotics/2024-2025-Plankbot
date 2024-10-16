@@ -4,15 +4,32 @@ package frc.robot.subsystems.swerve;
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
+import static edu.wpi.first.units.MutableMeasure.mutable;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Volts;
+
+import edu.wpi.first.units.Distance;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.MutableMeasure;
+import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.Voltage;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import com.kauailabs.navx.frc.AHRS;
-import frc.robot.subsystems.swerve.Constants.DriveConstants;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+
+import java.security.spec.MGF1ParameterSpec;
+
+import com.kauailabs.navx.frc.AHRS;
+
+import frc.robot.subsystems.swerve.Constants.DriveConstants;
+import frc.robot.subsystems.swerve.SwerveModule;
 
 public class DriveSubsystem extends SubsystemBase {
   // Robot swerve modules
@@ -50,6 +67,73 @@ public class DriveSubsystem extends SubsystemBase {
 
   // The gyro sensor
   private final AHRS m_gyro = new AHRS();
+
+  // SysID support
+  // Mutable holders for logging values; persisted to avoid reallocation
+  private final MutableMeasure<Voltage> m_appliedVoltage = mutable(Volts.of(0));
+  private final MutableMeasure<Distance> m_distance = mutable(Meters.of(0));
+  private final MutableMeasure<Velocity<Distance>> m_velocity = mutable(MetersPerSecond.of(0));
+
+  private final SysIdRoutine m_sysIdRoutine = 
+    new SysIdRoutine(
+      new SysIdRoutine.Config(), // default config is 1 volt/second ramp rate and 7 volt step voltage
+      new SysIdRoutine.Mechanism(
+        // Tell SysId how to plumb the driving voltage to the motors.
+        voltage -> {
+          m_frontLeft.setDriveVoltage(voltage.magnitude());
+          m_rearLeft.setDriveVoltage(voltage.magnitude());
+          m_frontRight.setDriveVoltage(voltage.magnitude());
+          m_rearRight.setDriveVoltage(voltage.magnitude());
+        },
+        log -> {
+          // record a frame for each drive motor
+          log.motor("drive-front-left")
+            .voltage(
+              m_appliedVoltage.mut_replace(
+                m_frontLeft.getDriveVoltage(), Volts))
+            .linearPosition(
+              m_distance.mut_replace(
+                m_frontLeft.getDrivePosition(), Meters))
+            .linearVelocity(
+              m_velocity.mut_replace(
+                m_frontLeft.getDriveVelocity(), MetersPerSecond));
+          
+          log.motor("drive-rear-left")
+            .voltage(
+              m_appliedVoltage.mut_replace(
+                m_rearLeft.getDriveVoltage(), Volts))
+            .linearPosition(
+              m_distance.mut_replace(
+                m_rearLeft.getDrivePosition(), Meters))
+            .linearVelocity(
+              m_velocity.mut_replace(
+                m_rearLeft.getDriveVelocity(), MetersPerSecond));
+          
+          log.motor("drive-front-right")
+            .voltage(
+              m_appliedVoltage.mut_replace(
+                m_frontRight.getDriveVoltage(), Volts))
+            .linearPosition(
+              m_distance.mut_replace(
+                m_frontRight.getDrivePosition(), Meters))
+            .linearVelocity(
+              m_velocity.mut_replace(
+                m_frontRight.getDriveVelocity(), MetersPerSecond));
+          
+          log.motor("drive-rear-right")
+            .voltage(
+              m_appliedVoltage.mut_replace(
+                m_rearRight.getDriveVoltage(), Volts))
+            .linearPosition(
+              m_distance.mut_replace(
+                m_rearRight.getDrivePosition(), Meters))
+            .linearVelocity(
+              m_velocity.mut_replace(
+                m_rearRight.getDriveVelocity(), MetersPerSecond));
+          
+        },
+        this));
+
 
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry =
@@ -173,5 +257,14 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public double getTurnRate() {
     return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+  }
+
+  /* SysID Commands */
+  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return m_sysIdRoutine.quasistatic(direction);
+  }
+
+  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    return m_sysIdRoutine.dynamic(direction);
   }
 }
