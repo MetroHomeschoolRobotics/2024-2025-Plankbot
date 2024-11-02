@@ -20,10 +20,14 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+import java.util.function.DoubleSupplier;
 import java.security.spec.MGF1ParameterSpec;
 
 import com.kauailabs.navx.frc.AHRS;
@@ -38,7 +42,6 @@ public class DriveSubsystem extends SubsystemBase {
           DriveConstants.kFrontLeftDriveMotorID,
           DriveConstants.kFrontLeftTurningMotorID,
           DriveConstants.kFrontLeftTurningEncoderID,
-          DriveConstants.kFrontLeftDriveEncoderReversed,
           DriveConstants.kFrontLeftTurningEncoderReversed);
 
   private final SwerveModule m_rearLeft =
@@ -46,7 +49,6 @@ public class DriveSubsystem extends SubsystemBase {
           DriveConstants.kRearLeftDriveMotorID,
           DriveConstants.kRearLeftTurningMotorID,
           DriveConstants.kRearLeftTurningEncoderID,
-          DriveConstants.kRearLeftDriveEncoderReversed,
           DriveConstants.kRearLeftTurningEncoderReversed);
 
   private final SwerveModule m_frontRight =
@@ -54,7 +56,6 @@ public class DriveSubsystem extends SubsystemBase {
           DriveConstants.kFrontRightDriveMotorID,
           DriveConstants.kFrontRightTurningMotorID,
           DriveConstants.kFrontRightTurningEncoderID,
-          DriveConstants.kFrontRightDriveEncoderReversed,
           DriveConstants.kFrontRightTurningEncoderReversed);
 
   private final SwerveModule m_rearRight =
@@ -62,7 +63,6 @@ public class DriveSubsystem extends SubsystemBase {
           DriveConstants.kRearRightDriveMotorID,
           DriveConstants.kRearRightTurningMotorID,
           DriveConstants.kRearRightTurningEncoderID,
-          DriveConstants.kRearRightDriveEncoderReversed,
           DriveConstants.kRearRightTurningEncoderReversed);
 
   // The gyro sensor
@@ -212,6 +212,13 @@ public class DriveSubsystem extends SubsystemBase {
     m_frontRight.setDesiredState(swerveModuleStates[1]);
     m_rearLeft.setDesiredState(swerveModuleStates[2]);
     m_rearRight.setDesiredState(swerveModuleStates[3]);
+
+    SmartDashboard.putNumber("Drive Speed", getDriveVelocity());
+    SmartDashboard.putNumber("Drive Votlage", getDriveVoltage());
+    SmartDashboard.putNumber("Desired Speed", swerveModuleStates[0].speedMetersPerSecond);
+    SmartDashboard.putNumber("PID Error", m_frontLeft.getDrivePIDError());
+    SmartDashboard.putNumber("PID Setpoint", m_frontLeft.getDrivePIDSetpoint());
+    
   }
 
   /**
@@ -258,6 +265,23 @@ public class DriveSubsystem extends SubsystemBase {
   public double getTurnRate() {
     return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
   }
+
+public Command swerveDriveCommand(DoubleSupplier xSpeed, DoubleSupplier ySpeed, DoubleSupplier rot, Boolean fieldRelative)
+{
+  return run(()->drive(xSpeed.getAsDouble(), ySpeed.getAsDouble(), rot.getAsDouble(), fieldRelative)).withName("swerveDrive");
+}
+
+// Query current speed
+public double getDriveVelocity()
+{
+  return m_frontLeft.getDriveVelocity();
+}
+
+// Query current voltage
+public double getDriveVoltage()
+{
+  return m_frontLeft.getDriveVoltage();
+}
 
   /* SysID Commands */
   public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {

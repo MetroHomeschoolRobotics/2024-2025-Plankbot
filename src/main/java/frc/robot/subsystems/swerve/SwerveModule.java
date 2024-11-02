@@ -16,21 +16,23 @@ import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.subsystems.swerve.Constants.ModuleConstants;
 import com.revrobotics.CANSparkLowLevel;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkFlex;
 import com.ctre.phoenix6.hardware.CANcoder;
 
 public class SwerveModule {
-  private final CANSparkMax m_driveMotor;
+  private final CANSparkFlex m_driveMotor;
   private final CANSparkMax m_turningMotor;
   private final CANcoder m_absoluteEncoder;
 
   private final PIDController m_drivePIDController =
-      new PIDController(ModuleConstants.kPModuleDriveController, 0, 0);
+      new PIDController(ModuleConstants.kPModuleDriveController, 
+      ModuleConstants.kIModuleDriveController, 0);
 
   // Using a TrapezoidProfile PIDController to allow for smooth turning
   private final ProfiledPIDController m_turningPIDController =
       new ProfiledPIDController(
           ModuleConstants.kPModuleTurningController,
-          0,
+          ModuleConstants.kIModuleTurningController,
           0,
           new TrapezoidProfile.Constraints(
               ModuleConstants.kMaxModuleAngularSpeedRadiansPerSecond,
@@ -49,9 +51,8 @@ public class SwerveModule {
       int driveMotorID,
       int turningMotorID,
       int absoluteEncoderID,
-      boolean driveEncoderReversed,
       boolean turningEncoderReversed) {
-    m_driveMotor = new CANSparkMax(driveMotorID, CANSparkLowLevel.MotorType.kBrushless);
+    m_driveMotor = new CANSparkFlex(driveMotorID, CANSparkLowLevel.MotorType.kBrushless);
     m_turningMotor = new CANSparkMax(turningMotorID, CANSparkLowLevel.MotorType.kBrushless);
 
     m_absoluteEncoder = new CANcoder(absoluteEncoderID);
@@ -61,9 +62,6 @@ public class SwerveModule {
     // resolution.
     m_driveMotor.getEncoder().setPositionConversionFactor(ModuleConstants.kDriveEncoderDistancePerRevolution); // Convert revolutions to m
     m_driveMotor.getEncoder().setVelocityConversionFactor(ModuleConstants.kDriveEncoderDistancePerRevolution / 60.0);  // Convert RPM to m/s
-
-    // Set whether drive encoder should be reversed or not
-    m_driveMotor.getEncoder().setInverted(driveEncoderReversed);
 
     // Set the distance (in this case, angle) in radians per pulse for the turning encoder.
     // This is the the angle through an entire rotation (2 * pi) divided by the
@@ -116,24 +114,25 @@ public class SwerveModule {
     var encoderRotation = new Rotation2d(getAngleRadians());
 
     // Optimize the reference state to avoid spinning further than 90 degrees
-    SwerveModuleState.optimize(desiredState, encoderRotation);
+    var optimizedState = SwerveModuleState.optimize(desiredState, encoderRotation);
 
     // Scale speed by cosine of angle error. This scales down movement perpendicular to the desired
     // direction of travel that can occur when modules change directions. This results in smoother
     // driving.
+    optimizedState.speedMetersPerSecond *= optimizedState.angle.minus(new Rotation2d(getAngleRadians())).getCos();
     //desiredState.cosineScale(encoderRotation);
 
     // Calculate the drive output from the drive PID controller.
     final double driveOutput =
-        m_drivePIDController.calculate(m_driveMotor.getEncoder().getVelocity(), desiredState.speedMetersPerSecond);
+        m_drivePIDController.calculate(m_driveMotor.getEncoder().getVelocity(), optimizedState.speedMetersPerSecond);
 
     // Calculate the turning motor output from the turning PID controller.
     final double turnOutput =
         m_turningPIDController.calculate(
-            getAngleRadians(), desiredState.angle.getRadians());
+            getAngleRadians(), optimizedState.angle.getRadians());
 
     // Calculate the turning motor output from the turning PID controller.
-    m_driveMotor.set(driveOutput);
+    m_driveMotor.set(Math.min(1.0, Math.max(-1.0, driveOutput)));
     m_turningMotor.set(turnOutput);
   }
 
@@ -151,6 +150,14 @@ public class SwerveModule {
   // Returns units of Volts
   public double getDriveVoltage() {
     return m_driveMotor.get() * RobotController.getBatteryVoltage();
+  }
+
+  public double getDrivePIDSetpoint() {
+    return m_driveMotor.get();
+  }
+
+  public double getDrivePIDError() {
+    return m_drivePIDController.getPositionError();
   }
 
   // Returns units of meters
