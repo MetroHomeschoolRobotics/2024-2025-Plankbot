@@ -86,7 +86,7 @@ public final class Constants {
     public static final double kIModuleTurningController = 0.0;
 
     public static final double kPModuleDriveController = 0.5;
-    public static final double kIModuleDriveController = 0.05;
+    public static final double kIModuleDriveController = 0.7;
   }
 
   public static final class OIConstants {
