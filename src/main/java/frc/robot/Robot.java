@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 // WPI Logging Imports
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
 
 
 /**
@@ -39,8 +40,9 @@ public class Robot extends TimedRobot {
     // Addition of WPI logging -George Horsey 2024-11-09 
     // Starts recording to data log
     DataLogManager.start();
-    
 
+    // Record both DS control and joystick data
+    DriverStation.startDataLog(DataLogManager.getLog());
   }
 
   /**
