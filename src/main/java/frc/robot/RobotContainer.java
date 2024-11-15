@@ -8,6 +8,11 @@ import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.subsystems.swerve.DriveSubsystem;
+import frc.robot.subsystems.swerve.Constants.AutoConstants;
+import frc.robot.subsystems.swerve.Constants.DriveConstants;
+import frc.robot.subsystems.swerve.Constants.OIConstants;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -21,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
+  private final DriveSubsystem m_swerveSubsystem = new DriveSubsystem();
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
@@ -42,6 +48,13 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
+      m_swerveSubsystem.setDefaultCommand(
+        m_swerveSubsystem.swerveDriveCommand(
+            () -> -Math.pow(MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriverControllerDeadBand), 3) * DriveConstants.kMaxSpeedMetersPerSecond, 
+            () -> -Math.pow(MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriverControllerDeadBand), 3) * DriveConstants.kMaxSpeedMetersPerSecond,
+            () -> -Math.pow(MathUtil.applyDeadband(m_driverController.getRightX(), OIConstants.kDriverControllerDeadBand), 3) * AutoConstants.kMaxAngularSpeedRadiansPerSecond,
+            false));
+
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
     new Trigger(m_exampleSubsystem::exampleCondition)
         .onTrue(new ExampleCommand(m_exampleSubsystem));

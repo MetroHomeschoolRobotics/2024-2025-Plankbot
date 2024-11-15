@@ -66,6 +66,8 @@ public final class Constants {
     public static final double kaVoltSecondsSquaredPerMeter = 0.15;
 
     public static final double kMaxSpeedMetersPerSecond = 5;
+
+    public static final double joystickDeadband = 0.03;
   }
 
   public static final class ModuleConstants {
@@ -85,8 +87,9 @@ public final class Constants {
     public static final double kPModuleTurningController = 0.5;
     public static final double kIModuleTurningController = 0.0;
 
-    public static final double kPModuleDriveController = 0.5;
-    public static final double kIModuleDriveController = 0.7;
+    public static final double kSModuleDriveController = 2.0;
+    public static final double kPModuleDriveController = 0.0;
+    public static final double kIModuleDriveController = 0.0;
   }
 
   public static final class OIConstants {

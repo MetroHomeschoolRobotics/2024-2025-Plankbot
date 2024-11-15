@@ -14,6 +14,7 @@ import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.MutableMeasure;
 import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -198,6 +199,11 @@ public class DriveSubsystem extends SubsystemBase {
    * @param fieldRelative Whether the provided x and y speeds are relative to the field.
    */
   public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {
+
+    xSpeed = MathUtil.applyDeadband(xSpeed, DriveConstants.joystickDeadband);
+    ySpeed = MathUtil.applyDeadband(ySpeed, DriveConstants.joystickDeadband);
+    rot = MathUtil.applyDeadband(rot, DriveConstants.joystickDeadband);
+
     var swerveModuleStates =
         DriveConstants.kDriveKinematics.toSwerveModuleStates(
             ChassisSpeeds.discretize(
@@ -218,6 +224,7 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Desired Speed", swerveModuleStates[0].speedMetersPerSecond);
     SmartDashboard.putNumber("PID Error", m_frontLeft.getDrivePIDError());
     SmartDashboard.putNumber("PID Setpoint", m_frontLeft.getDrivePIDSetpoint());
+    SmartDashboard.putNumber("Right Module Rotation", m_frontRight.getAngleRadians());
     
   }
 
