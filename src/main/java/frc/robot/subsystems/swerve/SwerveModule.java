@@ -152,6 +152,10 @@ public class SwerveModule {
     return m_driveMotor.get() * RobotController.getBatteryVoltage();
   }
 
+  public double getTurnVoltage() {
+    return m_turningMotor.get() * RobotController.getBatteryVoltage();
+  }
+  
   public double getDrivePIDSetpoint() {
     return m_driveMotor.get();
   }

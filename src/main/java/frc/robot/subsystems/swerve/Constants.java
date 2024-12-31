@@ -65,7 +65,7 @@ public final class Constants {
     public static final double kvVoltSecondsPerMeter = 0.8;
     public static final double kaVoltSecondsSquaredPerMeter = 0.15;
 
-    public static final double kMaxSpeedMetersPerSecond = 5;
+    public static final double kMaxSpeedMetersPerSecond = 5.1;
   }
 
   public static final class ModuleConstants {
@@ -82,10 +82,10 @@ public final class Constants {
         // Assumes the encoders are on a 1:1 reduction with the module shaft.
         (2 * Math.PI);
 
-    public static final double kPModuleTurningController = 0.5;
+    public static final double kPModuleTurningController = 0.13; //0.5;
     public static final double kIModuleTurningController = 0.0;
 
-    public static final double kPModuleDriveController = 0.5;
+    public static final double kPModuleDriveController = 0.4;
     public static final double kIModuleDriveController = 0.7;
   }
 

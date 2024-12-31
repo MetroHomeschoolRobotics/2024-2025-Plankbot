@@ -214,10 +214,13 @@ public class DriveSubsystem extends SubsystemBase {
     m_rearRight.setDesiredState(swerveModuleStates[3]);
 
     SmartDashboard.putNumber("Drive Speed", getDriveVelocity());
-    SmartDashboard.putNumber("Drive Votlage", getDriveVoltage());
-    SmartDashboard.putNumber("Desired Speed", swerveModuleStates[0].speedMetersPerSecond);
-    SmartDashboard.putNumber("PID Error", m_frontLeft.getDrivePIDError());
-    SmartDashboard.putNumber("PID Setpoint", m_frontLeft.getDrivePIDSetpoint());
+    SmartDashboard.putNumber("Drive Voltage", getDriveVoltage());
+    SmartDashboard.putNumber("Turn Voltage", m_rearLeft.getTurnVoltage());
+    SmartDashboard.putNumber("Desired Rotation", swerveModuleStates[2].angle.getRadians());
+    SmartDashboard.putNumber("Actual Heading", m_rearLeft.getAngleRadians());
+    SmartDashboard.putNumber("Desired Speed", swerveModuleStates[2].speedMetersPerSecond);
+    SmartDashboard.putNumber("PID Error", m_rearLeft.getDrivePIDError());
+    SmartDashboard.putNumber("PID Setpoint", m_rearLeft.getDrivePIDSetpoint());
     
   }
 
@@ -274,13 +277,13 @@ public Command swerveDriveCommand(DoubleSupplier xSpeed, DoubleSupplier ySpeed, 
 // Query current speed
 public double getDriveVelocity()
 {
-  return m_frontLeft.getDriveVelocity();
+  return m_rearLeft.getDriveVelocity();
 }
 
 // Query current voltage
 public double getDriveVoltage()
 {
-  return m_frontLeft.getDriveVoltage();
+  return m_rearLeft.getDriveVoltage();
 }
 
   /* SysID Commands */
